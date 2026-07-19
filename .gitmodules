@@ -1,0 +1,6 @@
+[submodule "linux"]
+	path = linux
+	url = https://github.com/yunkya2/linux.git
+[submodule "buildroot"]
+	path = buildroot
+	url = https://github.com/yunkya2/buildroot.git
