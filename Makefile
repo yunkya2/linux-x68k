@@ -62,7 +62,7 @@ buildroot-help buildroot-clean buildroot-distclean:
 buildroot-toolchain buildroot-menuconfig buildroot-savedefconfig: buildroot-config
 	$(BUILDROOT) $(subst buildroot-,,$@)
 
-busybox busybox-menuconfig busybox-rebuild busybox-updateconfig: buildroot-toolchain
+busybox busybox-menuconfig busybox-rebuild busybox-update-config: buildroot-toolchain
 	$(BUILDROOT) $@
 
 buildroot-config: buildroot/.config
