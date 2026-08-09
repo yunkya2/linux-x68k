@@ -33,6 +33,14 @@ static int skip_gzip_string(const unsigned char *data, size_t size,
     return *offset <= size && data[*offset - 1] == 0;
 }
 
+static void gunzip_progress(unsigned long done, unsigned long total)
+{
+    (void)done;
+    (void)total;
+    putchar('.');
+    fflush(stdout);
+}
+
 static unsigned char *gunzip(const unsigned char *data, size_t size,
                              size_t *output_size)
 {
@@ -76,7 +84,8 @@ static unsigned char *gunzip(const unsigned char *data, size_t size,
         return NULL;
 
     source_len = size - 8 - offset;
-    if (puff(output, &dest_len, data + offset, &source_len) != 0 ||
+    if (puff(output, &dest_len, data + offset, &source_len,
+             gunzip_progress) != 0 ||
         source_len != size - 8 - offset ||
         dest_len != get_le32(data + size - 4) ||
         crc32(output, dest_len) != get_le32(data + size - 8)) {
@@ -168,14 +177,16 @@ int main(int argc, char **argv)
         size_t uncompressed_size;
         unsigned char *uncompressed;
 
-        printf("Decompressing %s...\n", vmlinux);
+        printf("Decompressing %s", vmlinux);
+        fflush(stdout);
         uncompressed = gunzip((const unsigned char *)data, size,
                               &uncompressed_size);
         if (uncompressed == NULL) {
-            fprintf(stderr, "Failed to decompress %s\n", vmlinux);
+            fprintf(stderr, "\nFailed to decompress %s\n", vmlinux);
             free(data);
             return 1;
         }
+        printf(" done\n");
         free(data);
         data = (char *)uncompressed;
         size = uncompressed_size;

@@ -3,6 +3,7 @@
  * Copyright (C) 2002-2013 Mark Adler
  * For conditions of distribution and use, see copyright notice in puff.h
  * version 2.3, 21 Jan 2013
+ * Altered for linux-x68k to report decompression progress.
  *
  * puff.c is a simple inflate written to be an unambiguous way to specify the
  * deflate format.  It is not written for speed but rather simplicity.  As a
@@ -105,6 +106,8 @@ struct state {
     const unsigned char *in;    /* input buffer */
     unsigned long inlen;        /* available input at in */
     unsigned long incnt;        /* bytes read so far */
+    unsigned long next_progress;/* next input position to report */
+    void (*progress)(unsigned long, unsigned long);
     int bitbuf;                 /* bit buffer */
     int bitcnt;                 /* number of bits in bit buffer */
 
@@ -133,6 +136,10 @@ local int bits(struct state *s, int need)
         if (s->incnt == s->inlen)
             longjmp(s->env, 1);         /* out of input */
         val |= (long)(s->in[s->incnt++]) << s->bitcnt;  /* load eight bits */
+        if (s->progress && s->incnt >= s->next_progress) {
+            s->progress(s->incnt, s->inlen);
+            s->next_progress += 32768;
+        }
         s->bitcnt += 8;
     }
 
@@ -190,6 +197,10 @@ local int stored(struct state *s)
     else {                                      /* just scanning */
         s->outcnt += len;
         s->incnt += len;
+    }
+    while (s->progress && s->incnt >= s->next_progress) {
+        s->progress(s->incnt, s->inlen);
+        s->next_progress += 32768;
     }
 
     /* done with a valid stored block */
@@ -793,7 +804,8 @@ local int dynamic(struct state *s)
 int puff(unsigned char *dest,           /* pointer to destination pointer */
          unsigned long *destlen,        /* amount of output space */
          const unsigned char *source,   /* pointer to source data pointer */
-         unsigned long *sourcelen)      /* amount of input available */
+         unsigned long *sourcelen,      /* amount of input available */
+         void (*progress)(unsigned long, unsigned long))
 {
     struct state s;             /* input/output state */
     int last, type;             /* block information */
@@ -808,6 +820,8 @@ int puff(unsigned char *dest,           /* pointer to destination pointer */
     s.in = source;
     s.inlen = *sourcelen;
     s.incnt = 0;
+    s.next_progress = 32768;
+    s.progress = progress;
     s.bitbuf = 0;
     s.bitcnt = 0;
 

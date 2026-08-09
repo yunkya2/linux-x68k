@@ -2,6 +2,8 @@
   Copyright (C) 2002-2013 Mark Adler, all rights reserved
   version 2.3, 21 Jan 2013
 
+  Altered for linux-x68k to report decompression progress.
+
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the author be held liable for any damages
   arising from the use of this software.
@@ -32,4 +34,5 @@
 int puff(unsigned char *dest,           /* pointer to destination pointer */
          unsigned long *destlen,        /* amount of output space */
          const unsigned char *source,   /* pointer to source data pointer */
-         unsigned long *sourcelen);     /* amount of input available */
+         unsigned long *sourcelen,      /* amount of input available */
+         void (*progress)(unsigned long, unsigned long));
