@@ -9,6 +9,8 @@ LDFLAGS = -s -specs=nano.specs
 
 BUILDROOT := ./buildroot.sh
 BUILDKERNEL := ./buildkernel.sh
+XDFTOOL ?= xdftool.py
+XDF := linux-x68k.xdf
 
 ##############################################################################
 
@@ -23,7 +25,7 @@ loader.x: loader.o puff.o
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	-rm -f *.o *.x *.elf
+	-rm -f *.o *.x *.elf $(XDF) AUTOEXEC.BAT
 
 release:
 	zip -r linux-x68k-$(GIT_REPO_VERSION).zip loader.x vmlinux.bin
@@ -43,6 +45,14 @@ linux vmlinux.bin:
 
 vmlinux.gz: vmlinux.bin
 	gzip -c vmlinux.bin > vmlinux.gz
+
+xdf: $(XDF)
+
+$(XDF): HUMAN.SYS COMMAND.X AUTOEXEC.BAT loader.x vmlinux.gz
+	$(XDFTOOL) c $@ $^
+
+AUTOEXEC.BAT:
+	printf 'loader.x vmlinux.gz\r\n' > $@
 
 linux-config: linux/build/.config
 
@@ -80,5 +90,5 @@ buildroot/.config:
 
 ##############################################################################
 
-.PHONY: help all clean everything release
+.PHONY: help all clean everything release xdf
 .PHONY: linux buildroot
