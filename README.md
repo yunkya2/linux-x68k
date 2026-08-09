@@ -11,6 +11,7 @@
 ## 起動方法
 
 - [リリースアーカイブ](https://github.com/yunkya2/linux-x68k/releases)内の `loader.x` と `vmlinux.bin` をHuman68k上で同じディレクトリに置き、 `loader.x` を実行してください
+- gzip圧縮したカーネルも `loader.x vmlinux.bin.gz` のようにファイル名を指定して起動できます
 - しばらく待つとLinuxカーネルが起動し、シェルプロンプトが表示されます
   - シェルプロンプトが出るまで、10MHz機で1分半ほどかかります。気長に待ってください
   - キーボードはUS配列になっています

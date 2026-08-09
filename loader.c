@@ -5,6 +5,87 @@
 #include <stdint.h>
 #include <x68k/iocs.h>
 #include <x68k/dos.h>
+#include "puff.h"
+
+static uint32_t get_le32(const unsigned char *p)
+{
+    return (uint32_t)p[0] | (uint32_t)p[1] << 8 |
+           (uint32_t)p[2] << 16 | (uint32_t)p[3] << 24;
+}
+
+static uint32_t crc32(const unsigned char *data, size_t size)
+{
+    uint32_t crc = ~0U;
+
+    while (size--) {
+        crc ^= *data++;
+        for (int i = 0; i < 8; i++)
+            crc = (crc >> 1) ^ (0xedb88320U & -(crc & 1));
+    }
+    return ~crc;
+}
+
+static int skip_gzip_string(const unsigned char *data, size_t size,
+                            size_t *offset)
+{
+    while (*offset < size && data[(*offset)++] != 0)
+        ;
+    return *offset <= size && data[*offset - 1] == 0;
+}
+
+static unsigned char *gunzip(const unsigned char *data, size_t size,
+                             size_t *output_size)
+{
+    size_t offset = 10;
+    unsigned char flags;
+    unsigned long source_len, dest_len;
+    unsigned char *output;
+
+    if (size < 18 || data[0] != 0x1f || data[1] != 0x8b || data[2] != 8)
+        return NULL;
+    flags = data[3];
+    if (flags & 0xe0)
+        return NULL;
+    if (flags & 4) {
+        unsigned int extra_len;
+        if (offset + 2 > size - 8)
+            return NULL;
+        extra_len = data[offset] | (unsigned int)data[offset + 1] << 8;
+        offset += 2;
+        if (extra_len > size - 8 - offset)
+            return NULL;
+        offset += extra_len;
+    }
+    if ((flags & 8) && !skip_gzip_string(data, size - 8, &offset))
+        return NULL;
+    if ((flags & 16) && !skip_gzip_string(data, size - 8, &offset))
+        return NULL;
+    if (flags & 2) {
+        if (offset + 2 > size - 8)
+            return NULL;
+        offset += 2;
+    }
+    if (offset > size - 8)
+        return NULL;
+
+    dest_len = get_le32(data + size - 4);
+    if (dest_len == 0)
+        return NULL;
+    output = malloc(dest_len);
+    if (output == NULL)
+        return NULL;
+
+    source_len = size - 8 - offset;
+    if (puff(output, &dest_len, data + offset, &source_len) != 0 ||
+        source_len != size - 8 - offset ||
+        dest_len != get_le32(data + size - 4) ||
+        crc32(output, dest_len) != get_le32(data + size - 8)) {
+        free(output);
+        return NULL;
+    }
+    *output_size = dest_len;
+    return output;
+}
 
 void startlinux(void *addr, void *data, size_t size)
 {
@@ -47,9 +128,18 @@ int main(int argc, char **argv)
         fprintf(stderr, "Failed to open %s\n", vmlinux);
         return 1;
     }
-    fseek(fp, 0, SEEK_END);
-    size_t size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
+    if (fseek(fp, 0, SEEK_END) != 0) {
+        fprintf(stderr, "Failed to seek %s\n", vmlinux);
+        fclose(fp);
+        return 1;
+    }
+    long file_size = ftell(fp);
+    if (file_size < 0 || fseek(fp, 0, SEEK_SET) != 0) {
+        fprintf(stderr, "Failed to determine size of %s\n", vmlinux);
+        fclose(fp);
+        return 1;
+    }
+    size_t size = file_size;
     char *data = (char *)malloc(size);
     if (data == NULL) {
         fprintf(stderr, "Failed to allocate memory for %s\n", vmlinux);
@@ -65,7 +155,31 @@ int main(int argc, char **argv)
         fflush(stdout);
     }
     printf("\n");
+    if (ferror(fp)) {
+        fprintf(stderr, "Failed to read %s\n", vmlinux);
+        free(data);
+        fclose(fp);
+        return 1;
+    }
     fclose(fp);
+
+    if (size >= 2 && (unsigned char)data[0] == 0x1f &&
+        (unsigned char)data[1] == 0x8b) {
+        size_t uncompressed_size;
+        unsigned char *uncompressed;
+
+        printf("Decompressing %s...\n", vmlinux);
+        uncompressed = gunzip((const unsigned char *)data, size,
+                              &uncompressed_size);
+        if (uncompressed == NULL) {
+            fprintf(stderr, "Failed to decompress %s\n", vmlinux);
+            free(data);
+            return 1;
+        }
+        free(data);
+        data = (char *)uncompressed;
+        size = uncompressed_size;
+    }
 
     _iocs_b_curoff();
 

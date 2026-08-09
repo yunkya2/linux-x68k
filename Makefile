@@ -14,6 +14,8 @@ BUILDKERNEL := ./buildkernel.sh
 
 all: loader.x vmlinux.bin
 
+loader.x: loader.o puff.o
+
 %.x: %.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 
