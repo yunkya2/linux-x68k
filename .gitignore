@@ -2,3 +2,4 @@
 *.x
 *.elf
 vmlinux.bin
+vmlinux.gz

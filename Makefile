@@ -12,7 +12,7 @@ BUILDKERNEL := ./buildkernel.sh
 
 ##############################################################################
 
-all: loader.x vmlinux.bin
+all: loader.x vmlinux.bin vmlinux.gz
 
 loader.x: loader.o puff.o
 
@@ -40,6 +40,9 @@ everything:
 linux vmlinux.bin:
 	$(BUILDKERNEL) -j$(shell nproc) all
 	buildroot/output/host/bin/m68k-linux-objcopy -O binary linux/build/vmlinux vmlinux.bin
+
+vmlinux.gz: vmlinux.bin
+	gzip -c vmlinux.bin > vmlinux.gz
 
 linux-config: linux/build/.config
 
