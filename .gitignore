@@ -6,3 +6,6 @@ vmlinux.gz
 HUMAN.SYS
 COMMAND.X
 AUTOEXEC.BAT
+*.zip
+*.xdf
+*.hdf
