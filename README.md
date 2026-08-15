@@ -12,9 +12,10 @@
 
 - [リリースアーカイブ](https://github.com/yunkya2/linux-x68k/releases)内の `loader.x` と `vmlinux.bin` をHuman68k上で同じディレクトリに置き、 `loader.x` を実行してください
 - gzip圧縮したカーネルも `loader.x vmlinux.gz` のようにファイル名を指定して起動できます
-- `HUMAN.SYS`、`COMMAND.X`、`xdftool.py`を用意して`make xdf`を実行すると、エミュレータから直接起動できる`linux-x68k.xdf`を作成できます。起動後は`AUTOEXEC.BAT`から自動的にLinuxを起動します
+- `HUMAN.SYS`、`COMMAND.X`、`xdftool.py`を用意して`make xdf`, `make hdf`を実行すると、エミュレータから直接起動できる`linux-x68k.xdf`, `linux-x68k.hdf`を作成できます。起動後は`AUTOEXEC.BAT`から自動的にLinuxを起動します
 - しばらく待つとLinuxカーネルが起動し、シェルプロンプトが表示されます
   - シェルプロンプトが出るまで、10MHz機で1分半ほどかかります。気長に待ってください
+    - (gzip圧縮したカーネルを使用するとさらに時間がかかります)
   - キーボードはUS配列になっています
 - 起動すると本体の電源スイッチが効かなくなります。電源を切る際は一度リセットしてください
 
@@ -51,9 +52,10 @@ make everything
   - MFP Timer-C (tick timer)
   - MFP USART (キー入力)
   - カーネルデバッグコンソール出力
-  - グラフィックVRAMによるフレームバッファコンソール
-    - Linux kernelのsimple framebufferはX68000のテキストVRAMのようなプレーン形式をサポートしていないため、グラフィック画面をコンソール出力に使用しています
-    - simple framebufferが対応しているピクセルフォーマットは(MSB側から見て)RGBの並びですがX68000はGRBの順に並んでいるため、カラーパレットを用いてRとGを入れ替えています
+  - テキストVRAMによるフレームバッファコンソール
+  - ~~グラフィックVRAMによるフレームバッファコンソール~~
+    - ~~Linux kernelのsimple framebufferはX68000のテキストVRAMのようなプレーン形式をサポートしていないため、グラフィック画面をコンソール出力に使用しています~~
+    - ~~simple framebufferが対応しているピクセルフォーマットは(MSB側から見て)RGBの並びですがX68000はGRBの順に並んでいるため、カラーパレットを用いてRとGを入れ替えています~~
 - Linuxカーネルはアドレス 0x004000- に配置されます
   - Human68k上のローダーはmalloc()で確保した領域に一旦ロードした後、0x004000-にコピーしてからジャンプします
 - ユーザランドのCライブラリにはuClibcを使用しています
