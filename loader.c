@@ -251,8 +251,21 @@ int main(int argc, char **argv)
     _iocs_set232c(mode);
 
     // Initialize screen
+#ifdef CONFIG_FB_SIMPLE
     _iocs_crtmod(12);
     _iocs_g_clr_on();
+#else
+    _iocs_crtmod(16);
+    for (int i = 0; i < 16; i++) {
+        // Convert VGA color code (0-15) to GGGGGRRRRRBBBBBI format (16-bit)
+        int r = (i & 0x1) ? 0x1f : 0x00;  // Red
+        int g = (i & 0x2) ? 0x1f : 0x00;  // Green
+        int b = (i & 0x4) ? 0x1f : 0x00;  // Blue
+        int bright = (i & 0x8) ? 0x01 : 0x00;  // Intensity
+        int color = (g << 11) | (r << 6) | (b << 1) | bright;
+        _iocs_tpalet2(i, color);
+    }
+#endif
 
     // Set graphics color palette
     for (int i = 0; i < 128; i++) {
