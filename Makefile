@@ -11,6 +11,7 @@ BUILDROOT := ./buildroot.sh
 BUILDKERNEL := ./buildkernel.sh
 XDFTOOL ?= xdftool.py
 XDF := linux-x68k.xdf
+HDF := linux-x68k.hdf
 
 ##############################################################################
 
@@ -25,9 +26,9 @@ loader.x: loader.o puff.o
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	-rm -f *.o *.x *.elf $(XDF) AUTOEXEC.BAT
+	-rm -f *.o *.x *.elf $(XDF) $(HDF) AUTOEXEC.BAT
 
-release:
+release: xdf hdf
 	zip -r linux-x68k-$(GIT_REPO_VERSION).zip loader.x vmlinux.bin
 
 everything:
@@ -48,11 +49,17 @@ vmlinux.gz: vmlinux.bin
 
 xdf: $(XDF)
 
-$(XDF): HUMAN.SYS COMMAND.X AUTOEXEC.BAT loader.x vmlinux.gz
-	$(XDFTOOL) c $@ $^
+hdf: $(HDF)
 
-AUTOEXEC.BAT:
-	printf 'loader.x vmlinux.gz\r\n' > $@
+$(XDF): HUMAN.SYS COMMAND.X loader.x vmlinux.gz
+	printf 'loader.x vmlinux.gz\r\n' > AUTOEXEC.BAT
+	$(XDFTOOL) c $@ $^ AUTOEXEC.BAT
+	rm -f AUTOEXEC.BAT
+
+$(HDF): HUMAN.SYS COMMAND.X loader.x vmlinux.bin
+	printf 'loader.x vmlinux.bin\r\n' > AUTOEXEC.BAT
+	$(XDFTOOL) c /h10 $@ $^ AUTOEXEC.BAT
+	rm -f AUTOEXEC.BAT
 
 linux-config: linux/build/.config
 
@@ -90,5 +97,5 @@ buildroot/.config:
 
 ##############################################################################
 
-.PHONY: help all clean everything release xdf
+.PHONY: help all clean everything release xdf hdf
 .PHONY: linux buildroot
