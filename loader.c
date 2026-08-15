@@ -96,6 +96,15 @@ static unsigned char *gunzip(const unsigned char *data, size_t size,
     return output;
 }
 
+static int is_x68000z(void)
+{
+    volatile unsigned char *system_port = (volatile unsigned char *)0xe8e000;
+
+    /* X68000Z version query */
+    *system_port = 'Z';
+    return *system_port == 'X';
+}
+
 void startlinux(void *addr, void *data, size_t size)
 {
     register int a0 __asm__("a0") = (int)addr;
@@ -198,7 +207,10 @@ int main(int argc, char **argv)
 
     _dos_super(0);
     __asm__ volatile ("ori.w #0x0700,%sr");
-    __asm__ volatile ("reset");
+
+    if (!is_x68000z()) {    // Workaround for X68000 Z
+        __asm__ volatile ("reset");
+    }
 
     // Initialize MFP
     static const unsigned char mfp_init[] = {
@@ -208,7 +220,8 @@ int main(int argc, char **argv)
         0x29, 0x88,  0x2b, 0x01,  0x2f, 0xff,  0x2d, 0x01,
     };
     for (int i = 0; i < sizeof(mfp_init); i += 2) {
-        *(volatile unsigned char *)(0xe88000 + mfp_init[i]) = mfp_init[i + 1];
+        *(volatile unsigned char *)(0xe88000 + mfp_init[i]) =
+            mfp_init[i + 1];
     }
 
     // Initialize SCC
