@@ -43,6 +43,7 @@ everything:
 linux vmlinux.bin:
 	$(BUILDKERNEL) -j$(shell nproc) all
 	buildroot/output/host/bin/m68k-linux-objcopy -O binary linux/build/vmlinux vmlinux.bin
+	./elf2x68k.py --force-reloc-symbol jiffies -o vmlinux.x linux/build/vmlinux
 
 vmlinux.gz: vmlinux.bin
 	gzip -c vmlinux.bin > vmlinux.gz
@@ -56,8 +57,9 @@ $(XDF): HUMAN.SYS COMMAND.X loader.x vmlinux.gz
 	$(XDFTOOL) c $@ $^ AUTOEXEC.BAT
 	rm -f AUTOEXEC.BAT
 
-$(HDF): HUMAN.SYS COMMAND.X loader.x vmlinux.bin
-	printf 'loader.x vmlinux.bin\r\n' > AUTOEXEC.BAT
+$(HDF): HUMAN.SYS COMMAND.X align.x vmlinux.x
+	printf 'align.x\r\n' > AUTOEXEC.BAT
+	printf 'vmlinux.x\r\n' >> AUTOEXEC.BAT
 	$(XDFTOOL) c /h10 $@ $^ AUTOEXEC.BAT
 	rm -f AUTOEXEC.BAT
 
