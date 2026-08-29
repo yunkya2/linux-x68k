@@ -15,7 +15,7 @@ HDF := linux-x68k.hdf
 
 ##############################################################################
 
-all: loader.x vmlinux.bin vmlinux.gz
+all: linux.x linux.sys
 
 loader.x: loader.o puff.o
 
@@ -26,10 +26,10 @@ loader.x: loader.o puff.o
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	-rm -f *.o *.x *.elf $(XDF) $(HDF) AUTOEXEC.BAT
+	-rm -f *.o *.x *.elf linux.sys $(XDF) $(HDF) AUTOEXEC.BAT
 
-release: xdf hdf
-	zip -r linux-x68k-$(GIT_REPO_VERSION).zip loader.x vmlinux.bin
+release: hdf
+	zip -r linux-x68k-$(GIT_REPO_VERSION).zip linux.x linux.sys
 
 everything:
 	$(MAKE) buildroot-config
@@ -40,10 +40,14 @@ everything:
 
 ##############################################################################
 
-linux vmlinux.bin:
+linux:
 	$(BUILDKERNEL) -j$(shell nproc) all
+
+vmlinux.bin: linux
 	buildroot/output/host/bin/m68k-linux-objcopy -O binary linux/build/vmlinux vmlinux.bin
-	./elf2x68k.py --force-reloc-symbol jiffies -o vmlinux.x linux/build/vmlinux
+
+linux.sys: linux
+	./elf2x68k.py --force-reloc-symbol jiffies -o $@ linux/build/vmlinux
 
 vmlinux.gz: vmlinux.bin
 	gzip -c vmlinux.bin > vmlinux.gz
@@ -57,9 +61,8 @@ $(XDF): HUMAN.SYS COMMAND.X loader.x vmlinux.gz
 	$(XDFTOOL) c $@ $^ AUTOEXEC.BAT
 	rm -f AUTOEXEC.BAT
 
-$(HDF): HUMAN.SYS COMMAND.X align.x vmlinux.x
-	printf 'align.x\r\n' > AUTOEXEC.BAT
-	printf 'vmlinux.x\r\n' >> AUTOEXEC.BAT
+$(HDF): HUMAN.SYS COMMAND.X linux.x linux.sys
+	printf 'linux.x\r\n' > AUTOEXEC.BAT
 	$(XDFTOOL) c /h10 $@ $^ AUTOEXEC.BAT
 	rm -f AUTOEXEC.BAT
 

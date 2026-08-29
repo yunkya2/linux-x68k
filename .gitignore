@@ -3,6 +3,7 @@
 *.elf
 vmlinux.bin
 vmlinux.gz
+linux.sys
 HUMAN.SYS
 COMMAND.X
 AUTOEXEC.BAT
