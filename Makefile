@@ -56,7 +56,8 @@ hdf: $(BINARIES)
 	(cd hdf && unlha.py x ../HUMAN302.LZH)
 	cp HIOCS.X hdf/SYS
 	sed -i 's/IOCS\.X/HIOCS.X/' hdf/CONFIG.SYS
-	echo -n "linux.x\r\n" > hdf/AUTOEXEC.BAT
+	echo -n 'PATH A:\;A:\SYS;A:\BIN;A:\BASIC2;A:\ETC;\r\n' > hdf/AUTOEXEC.BAT
+	echo -n "linux.x\r\n" >> hdf/AUTOEXEC.BAT
 	cp $(BINARIES) hdf/
 	(cd hdf && $(XDFTOOL) c /h10 ../$(HDF) *)
 
