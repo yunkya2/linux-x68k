@@ -72,7 +72,7 @@ linux.x -- init=/bin/sh
 
 ### ファイルとコマンド
 
-標準ユーザランドにはBusyBox、e2fsprogs、Micro Emacs（uemacs）、Rogueを収録しています。CライブラリはuClibcを使用します。
+標準ユーザランドにはBusyBox、e2fsprogs、Micro Emacs（uemacs）、[Rogue](https://github.com/leopard-gecko/homebrew-game)を収録しています。CライブラリはuClibcを使用します。
 
 `/`への変更は`linuxroot.img`に保存されます。Human68kのドライブは`humanfs`経由で`/mnt`以下に現れます。例えばCドライブは`/mnt/c`です。表示されるのはメディアが挿入されているドライブです。
 
@@ -107,7 +107,7 @@ InterruptスイッチやバスエラーなどでもHuman68kへ戻りますが、
 ビルド環境はUbuntu 24.04で確認しています。以下を用意してください。
 
 - Git、GNU Make、ホスト用C/C++コンパイラ、Python 3など、[Buildrootのビルドに必要なツール](buildroot/docs/manual/prerequisite.adoc)。設定画面を使う場合はncursesの開発用ライブラリも必要です。
-- Human68k用クロス開発環境。`m68k-xelf-gcc`が`PATH`にあり、`x68k/dos.h`および`nano.specs`を利用できることが必要です。これは`linux.x`のビルドに使い、このリポジトリの`make sdk`では生成しません。
+- [Human68k用クロス開発環境](https://github.com/yunkya2/elf2x68k.git)。`m68k-xelf-gcc`が`PATH`にあり、`x68k/dos.h`および`nano.specs`を利用できることが必要です。これは`linux.x`のビルドに使い、このリポジトリの`make sdk`では生成しません。
 - 初回ビルドでBuildrootがソースを取得するためのネットワーク接続。
 
 ```sh
@@ -162,7 +162,7 @@ SDKの標準設定は`buildroot/configs/x68k_sdk_defconfig`、起動用initramfs
 ビルド環境に加えて、次のファイルとツールを用意します。Human68k関連ファイルはリポジトリには含まれていません。
 
 - トップディレクトリに`HUMAN302.LZH`と`HIOCS.X`。
-- `PATH`上に`unlha.py`と`xdftool.py`。
+- `PATH`上に`unlha.py`(elf2x68kに同梱)と [xdftool.py](https://github.com/yunkya2/x68kmisc/tree/main/xdftool)
 
 ```sh
 make hdf
@@ -190,4 +190,5 @@ make hdf
 
 ## 謝辞
 
-[Atari Jaguar用Linux](https://cakehonolulu.github.io/linux-for-jaguar/)を参考に開発しました。開発者のcakehonolulu氏に感謝します。
+- [Atari Jaguar用Linux](https://cakehonolulu.github.io/linux-for-jaguar/)を参考に開発しました。開発者のcakehonolulu氏に感謝します。
+- 収録したRogueは[こちら](https://github.com/leopard-gecko/homebrew-game)から入手したmacOS用ソースコードをuClinuxで動作するよう修正したものです。配布されているleopard-gecko氏に感謝します。

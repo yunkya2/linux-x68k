@@ -12,5 +12,5 @@
 *.SYS
 *.X
 *.LZH
-toolchain/
+toolchain*/
 hdf/
